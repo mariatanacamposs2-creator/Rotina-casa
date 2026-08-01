@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checklist da Casa</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#E91E63">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <style>
+    body { font-family: Arial; background: #FFF8E1; margin: 0; padding: 15px; }
+ .container { max-width: 600px; margin: auto; }
+    h1 { color: #E91E63; text-align: center; }
+ .versiculo { background: #F8BBD0; color: #880E4F; padding: 12px; border-radius: 12px; font-style: italic; text-align: center; margin-bottom: 10px; border: 2px dashed #FFECB3; }
+ .data { text-align: center; color: #E91E63; font-weight: bold; margin-bottom: 20px; }
+ .comodo { background: #FFFFFF; border-radius: 15px; padding: 15px; margin-bottom: 18px; box-shadow: 0 3px 8px rgba(233,30,99,0.1); border-left: 6px solid #FFECB3; }
+ .comodo h2 { color: #E91E63; margin-top: 0; }
+ .tarefa { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px dashed #FFECB3; }
+ .tarefa input { margin-right: 12px; width: 20px; height: 20px; accent-color: #E91E63; }
+ .feito { text-decoration: line-through; opacity: 0.5; }
+    button { background: #E91E63; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+ .add-tarefa { display: flex; gap: 8px; margin-top: 12px; }
+ .add-tarefa input { flex: 1; padding: 9px; border: 2px solid #FFECB3; border-radius: 8px; background: #FFFDE7; }
+ .add-tarefa button { background: #FFD54F; color: #5D4037; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌸 Checklist da Casa 💛</h1>
+    <div class="versiculo" id="versiculo"></div>
+    <div class="data" id="dataHoje"></div>
+    <div id="app"></div>
+  </div>
+<script>
+const versiculos = [
+  "Tudo o que fizerem, façam de todo o coração, como para o Senhor. - Cl 3:23",
+  "O trabalho traz prosperidade. - Pv 10:4",
+  "Em tudo dai graças. - 1Ts 5:18"
+];
+document.getElementById("versiculo").innerText = versiculos[Math.floor(Math.random()*versiculos.length)];
+
+let dados = JSON.parse(localStorage.getItem("checklistCasa")) || {
+  "Quarto 🌸": ["Arrumar a cama", "Arrumar a mesa de estudo", "Arrumar guarda-roupa"],
+  "Sala 💛": ["Tirar poeira", "Organizar o sofá"],
+  "Cozinha 🍳": ["Lavar louça", "Limpar fogão", "Manter tudo limpo"]
+};
+let status = JSON.parse(localStorage.getItem("statusCasa")) || {};
+let ultimaData = localStorage.getItem("ultimaData");
+
+const hoje = new Date().toLocaleDateString('pt-BR');
+document.getElementById("dataHoje").innerText = "Hoje: " + hoje;
+
+if(ultimaData!== hoje){
+  status = {};
+  localStorage.setItem("ultimaData", hoje);
+  localStorage.setItem("statusCasa", JSON.stringify(status));
+}
+
+function salvar() {
+  localStorage.setItem("checklistCasa", JSON.stringify(dados));
+  localStorage.setItem("statusCasa", JSON.stringify(status));
+  render();
+}
+
+function toggle(c,i){
+  let key=c+i;
+  status[key]=!status[key];
+  salvar();
+}
+
+function adicionar(c){
+  let input=document.getElementById("input-"+c);
+  if(input.value.trim()==="")return;
+  dados[c].push(input.value.trim());
+  input.value="";
+  salvar();
+}
+
+function deletar(c,i){
+  dados[c].splice(i,1);
+  salvar();
+}
+
+function render(){
+  let app=document.getElementById("app");
+  app.innerHTML="";
+  for(let c in dados){
+    let html=`<div class="comodo"><h2>${c}</h2>`;
+    dados[c].forEach((t,i)=>{
+      let key=c+i;
+      let feito=status[key]?"feito":"";
+      let check=status[key]?"checked":"";
+      html+=`<div class="tarefa"><input type="checkbox" ${check} onchange="toggle('${c}',${i})"><label class="${feito}">${t}</label><button onclick="deletar('${c}',${i})">X</button></div>`;
+    });
+    html+=`<div class="add-tarefa"><input type="text" id="input-${c}" placeholder="Nova tarefa"><button onclick="adicionar('${c}')">+</button></div></div>`;
+    app.innerHTML+=html;
+  }
+}
+render();
+</script>
+</body>
+</html>
